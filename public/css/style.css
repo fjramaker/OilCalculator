@@ -81,3 +81,26 @@ body {
 .view-section.active {
     display: block; /* Only show active view */
 }
+
+/* Custom radio button colors for EN/CN/Price */
+.btn-outline-primary-custom {
+    color: var(--secondary-navy);
+    border-color: var(--light-blue);
+}
+
+.btn-check:checked + .btn-outline-primary-custom {
+    background-color: var(--secondary-navy);
+    color: white;
+    border-color: var(--secondary-navy);
+}
+
+/* Recipe Line Styling */
+.recipe-line {
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+}
+
+.recipe-line:last-child {
+    border-bottom: none;
+}
