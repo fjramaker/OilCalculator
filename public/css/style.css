@@ -1,0 +1,83 @@
+:root {
+    --primary-orange: #F16D34;
+    --light-orange: #FF986A;
+    --secondary-navy: #161E54;
+    --light-blue: #BBE0EF;
+    --bg-color: #F8F9FA;
+}
+
+body {
+    background-color: var(--bg-color);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--secondary-navy);
+}
+
+/* --- Organic Card Styling --- */
+.login-card {
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 10px 25px rgba(22, 30, 84, 0.1); /* Soft navy shadow */
+    overflow: hidden;
+}
+
+.card-header-custom {
+    background-color: white;
+    padding-top: 30px;
+    border-bottom: none;
+    text-align: center;
+}
+
+/* --- Logo Handling --- */
+.app-logo {
+    width: 120px;
+    height: auto;
+    margin-bottom: 10px;
+}
+
+/* --- Buttons --- */
+.btn-primary-custom {
+    background-color: var(--primary-orange);
+    border: none;
+    border-radius: 50px; /* Pill shape */
+    padding: 12px 30px;
+    font-weight: 600;
+    width: 100%;
+    transition: all 0.3s ease;
+}
+
+.btn-primary-custom:hover {
+    background-color: var(--light-orange);
+    transform: translateY(-2px);
+}
+
+.btn-link-custom {
+    color: var(--secondary-navy);
+    text-decoration: none;
+    font-size: 0.9rem;
+}
+
+.btn-link-custom:hover {
+    color: var(--primary-orange);
+    text-decoration: underline;
+}
+
+/* --- Form Inputs --- */
+.form-control {
+    border-radius: 12px;
+    padding: 12px;
+    border: 1px solid #dee2e6;
+    background-color: white;
+}
+
+.form-control:focus {
+    border-color: var(--light-blue);
+    box-shadow: 0 0 0 4px rgba(187, 224, 239, 0.4); /* Light blue glow */
+}
+
+/* --- View Toggle --- */
+.view-section {
+    display: none; /* Hide everything by default */
+}
+.view-section.active {
+    display: block; /* Only show active view */
+}
