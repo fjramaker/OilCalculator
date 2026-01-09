@@ -107,126 +107,155 @@ let carriers = [
     { itemNo: "60204156", nameEN: "Hydrating Cream", nameCN: "舒緩保濕乳" }
 ];
 
-// 1. Initial Data Load
+// --- 1. DEFINE WINDOW FUNCTIONS FIRST ---
+// This ensures they exist before loadData tries to call them
+
+window.populateSelectors = function() {
+    if (!allProducts || allProducts.length === 0) return;
+
+    const s = getSettings();
+    const filterEl = document.getElementById('oil-filter');
+    const filterText = filterEl ? filterEl.value.toLowerCase() : "";
+    
+    const filteredOils = allProducts.filter(p => {
+        const matchesType = p.is_oil && p.unit === "mL";
+        const matchesSearch = p.name.toLowerCase().includes(filterText) || 
+                            p.nameCN.includes(filterText);
+        return matchesType && matchesSearch;
+    });
+
+    const options = filteredOils.map(p => 
+        `<option value="${p.itemNo}">${s.isCN ? p.nameCN : p.name} (${p.size}mL)</option>`
+    ).join('');
+
+    const allSelects = document.querySelectorAll('#single-oil-select, .oil-id');
+    allSelects.forEach(sel => {
+        const currentVal = sel.value;
+        sel.innerHTML = `<option value="">Select Oil</option>` + options;
+        sel.value = currentVal;
+    });
+};
+
+window.calculateEverything = function() {
+    const s = getSettings();
+    const singleId = document.getElementById('single-oil-select').value;
+    const formulaDiv = document.getElementById('formula-display');
+
+    if (singleId && formulaDiv) {
+        const p = allProducts.find(x => x.itemNo === singleId);
+        if (!p) return;
+        
+        const price = s.useMem ? p.member_hkd : p.retail_hkd;
+        const bottleSize = parseFloat(p.size);
+        const costPerDrop = price / (bottleSize * s.dropsPerML);
+
+        formulaDiv.innerHTML = `\\[ \\text{Cost/Drop} = \\frac{HKD\\ ${price}}{${bottleSize}mL \\times ${s.dropsPerML}\\text{ dr}} = HKD\\ ${costPerDrop.toFixed(2)} \\]`;
+        
+        if (window.MathJax && window.MathJax.typeset) {
+            window.MathJax.typeset([formulaDiv]);
+        }
+    } else if (formulaDiv) {
+        formulaDiv.innerHTML = "Select an oil to see calculation";
+    }
+};
+
+window.adjustDrops = function(val) {
+    const el = document.getElementById('global-drops-cfg');
+    let current = parseInt(el.value) || 20;
+    el.value = Math.max(1, current + val);
+    localStorage.setItem('cfg_drops', el.value);
+    window.calculateEverything();
+};
+
+window.addRecipeLine = function() {
+    const container = document.getElementById('recipe-lines');
+    const div = document.createElement('div');
+    div.className = "recipe-line d-flex gap-2 align-items-center mb-2";
+    div.innerHTML = `
+        <select class="form-select form-select-sm oil-id" onchange="calculateEverything()" style="flex: 2;">
+            <option value="">Select Oil</option>
+        </select>
+        <div class="input-group input-group-sm" style="flex: 1;">
+            <input type="number" class="form-control text-center drop-count" value="1" onchange="calculateEverything()">
+            <span class="input-group-text small">dr</span>
+        </div>
+        <button class="btn btn-sm text-danger px-2" onclick="this.parentElement.remove(); calculateEverything()">×</button>
+    `;
+    container.appendChild(div);
+    window.populateSelectors();
+};
+
+window.setBottle = function(size, price) {
+    const btns = document.querySelectorAll('#bottle-btns button');
+    btns.forEach(b => b.classList.remove('active', 'btn-secondary'));
+    btns.forEach(b => b.classList.add('btn-outline-secondary'));
+
+    const selectedBtn = event.currentTarget;
+    selectedBtn.classList.add('active', 'btn-secondary');
+    selectedBtn.classList.remove('btn-outline-secondary');
+
+    window.currentBottleSize = size;
+    window.currentBottlePrice = price;
+    window.calculateEverything();
+};
+
+// --- 2. SUPPORTING LOGIC ---
+
 async function loadData() {
     try {
         const response = await fetch('doterra_products.json');
         allProducts = await response.json();
         setupToggles();
-        populateSelectors();
-        renderCarriers();
+        window.populateSelectors();
+        // Placeholder if renderCarriers isn't written yet
+        if (typeof renderCarriers === "function") renderCarriers(); 
     } catch (err) {
         console.error("Data load failed", err);
     }
 }
 
-// 2. State & Toggles
 function setupToggles() {
-    // Load from LocalStorage
     const drops = localStorage.getItem('cfg_drops') || 20;
     document.getElementById('global-drops-cfg').value = drops;
 
-    // Listeners for persistence
     document.querySelectorAll('input[name="lang"], input[name="price"], #global-drops-cfg').forEach(el => {
         el.addEventListener('change', () => {
             localStorage.setItem('cfg_drops', document.getElementById('global-drops-cfg').value);
-            populateSelectors();
-            renderCarriers();
-            calculateEverything();
+            window.populateSelectors();
+            if (typeof renderCarriers === "function") renderCarriers();
+            window.calculateEverything();
         });
     });
 }
 
 function getSettings() {
+    const langEl = document.getElementById('lang-cn');
+    const priceEl = document.getElementById('price-mem');
     return {
         dropsPerML: parseFloat(document.getElementById('global-drops-cfg').value) || 20,
-        isCN: document.getElementById('lang-cn').checked,
-        useMem: document.getElementById('price-mem').checked
+        isCN: langEl ? langEl.checked : false,
+        useMem: priceEl ? priceEl.checked : false
     };
 }
 
-// 3. UI Helpers
-function populateSelectors() {
-    const s = getSettings();
-    const oilSelects = document.querySelectorAll('select[id$="select"]'); // Matches single and recipe
-    const oils = allProducts.filter(p => p.is_oil && p.unit === "mL");
-    
-    // Create list of unique Name + Size strings
-    const options = oils.map(p => `<option value="${p.itemNo}">${s.isCN ? p.nameCN : p.name} (${p.size}mL)</option>`).join('');
-    
-    oilSelects.forEach(sel => {
-        const currentVal = sel.value;
-        sel.innerHTML = `<option value="">Select Oil</option>` + options;
-        sel.value = currentVal;
-    });
-}
+// --- 3. INITIALIZATION ---
 
-// 4. Calculation Engine
-window.calculateEverything = function() {
-    const s = getSettings();
-    let blendCost = 0;
-    let totalDrops = 0;
-
-    // Calculate Formula Frame
-    const singleId = document.getElementById('single-oil-select').value;
-    const formulaDiv = document.getElementById('formula-display');
-    if (singleId) {
-        const p = allProducts.find(x => x.itemNo === singleId);
-        const price = s.useMem ? p.member_hkd : p.retail_hkd;
-        const cpd = price / (parseFloat(p.size) * s.dropsPerML);
-        formulaDiv.innerHTML = `$$Cost = \\frac{${price}}{${p.size} \\times ${s.dropsPerML}} = HKD\\ ${cpd.toFixed(2)}/drop$$`;
-        // Re-render LaTeX if using MathJax, or just text
-    }
-
-    // Recipe Summing
-    document.querySelectorAll('.recipe-line').forEach(line => {
-        const id = line.querySelector('.oil-id').value;
-        const count = parseFloat(line.querySelector('.drop-count').value) || 0;
-        if (id) {
-            const p = allProducts.find(x => x.itemNo === id);
-            const price = s.useMem ? p.member_hkd : p.retail_hkd;
-            blendCost += (price / (parseFloat(p.size) * s.dropsPerML)) * count;
-            totalDrops += count;
-        }
-    });
-
-    document.getElementById('total-drops-sum').textContent = totalDrops;
-    document.getElementById('blend-total-cost').textContent = blendCost.toFixed(2);
-    
-    // Total
-    const addCost = parseFloat(document.getElementById('add-total-cost').textContent) || 0;
-    document.getElementById('final-total-price').textContent = (blendCost + addCost).toFixed(2);
-};
-
-// 5. Dynamic Elements
-window.addRecipeLine = function() {
-    const container = document.getElementById('recipe-lines');
-    const div = document.createElement('div');
-    div.className = "recipe-line d-flex gap-2 align-items-center";
-    div.innerHTML = `
-        <select class="form-select form-select-sm oil-id" onchange="calculateEverything()"></select>
-        <input type="number" class="form-control form-control-sm drop-count" value="1" style="width:70px" onchange="calculateEverything()">
-        <button class="btn btn-sm text-danger" onclick="this.parentElement.remove(); calculateEverything()">×</button>
-    `;
-    container.appendChild(div);
-    populateSelectors();
-};
-
-window.adjustDrops = function(val) {
-    const el = document.getElementById('global-drops-cfg');
-    el.value = Math.max(1, parseInt(el.value) + val);
-    calculateEverything();
-};
-
-// Logbook char count
-document.getElementById('log-why').addEventListener('input', function() {
-    document.getElementById('char-count').textContent = `${this.value.length}/288`;
-});
-
-// Start everything when logged in
 onAuthStateChanged(auth, (user) => {
     if (user) {
+        authView.classList.remove('active');
+        appView.classList.add('active');
         loadData();
-        // ... (rest of auth logic)
+    } else {
+        appView.classList.remove('active');
+        authView.classList.add('active');
+        authForm.reset();
     }
 });
+
+// Logbook char count logic
+const logWhy = document.getElementById('log-why');
+if (logWhy) {
+    logWhy.addEventListener('input', function() {
+        document.getElementById('char-count').textContent = `${this.value.length}/288`;
+    });
+}

@@ -104,3 +104,42 @@ body {
 .recipe-line:last-child {
     border-bottom: none;
 }
+
+/* --- Settings Bar Specifics --- */
+.login-card .form-control {
+    padding: 8px; /* Slightly smaller for the settings row */
+    font-size: 1rem;
+}
+
+/* Ensure the increment buttons match the organic style */
+.login-card .btn-outline-secondary {
+    border-color: #dee2e6;
+    color: var(--secondary-navy);
+    border-radius: 12px; /* Matching the input radius */
+}
+
+.login-card .btn-outline-secondary:hover {
+    background-color: var(--light-blue);
+    border-color: var(--light-blue);
+    color: var(--secondary-navy);
+}
+
+/* Fix for the input group rounded corners */
+.input-group > .form-control {
+    border-radius: 0 !important; /* Middle element of group should be flat */
+}
+.input-group > button:first-child {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+.input-group > button:last-child {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+/* Label styling for the settings */
+.text-uppercase {
+    color: var(--secondary-navy);
+    opacity: 0.7;
+    font-weight: 700;
+}

@@ -8,6 +8,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     <link rel="icon" type="image/png" href="img/logo.png">
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" id="MathJax-script" async></script>
+
 </head>
 <body>
 
@@ -47,31 +49,32 @@
         </div>
 
         <div id="app-view" class="view-section container pb-5">
-            <div class="row g-2 mb-4 p-3 bg-white rounded-4 shadow-sm">
-                <div class="col-6">
-                    <label class="small fw-bold d-block mb-1">Drops per mL</label>
-                    <div class="input-group input-group-sm">
-                        <button class="btn btn-outline-secondary" type="button" onclick="adjustDrops(-1)">-</button>
-                        <input type="number" id="global-drops-cfg" class="form-control text-center" value="20">
-                        <button class="btn btn-outline-secondary" type="button" onclick="adjustDrops(1)">+</button>
+            <div class="row g-3 mb-4 p-3 bg-white login-card mx-1">
+                <div class="col-12">
+                    <label class="small fw-bold d-block mb-1 text-uppercase" style="letter-spacing: 1px; font-size: 0.7rem;">Drops per mL</label>
+                    <div class="input-group">
+                        <button class="btn btn-outline-secondary px-3" type="button" onclick="adjustDrops(-1)">−</button>
+                        <input type="number" id="global-drops-cfg" class="form-control text-center fw-bold" value="20">
+                        <button class="btn btn-outline-secondary px-3" type="button" onclick="adjustDrops(1)">+</button>
                     </div>
                 </div>
-                <div class="col-3">
-                    <label class="small fw-bold d-block mb-1">Lang</label>
-                    <div class="btn-group btn-group-sm w-100" role="group">
+
+                <div class="col-6">
+                    <label class="small fw-bold d-block mb-1 text-uppercase" style="letter-spacing: 1px; font-size: 0.7rem;">Language</label>
+                    <div class="btn-group w-100" role="group">
                         <input type="radio" class="btn-check" name="lang" id="lang-en" checked>
                         <label class="btn btn-outline-primary-custom" for="lang-en">EN</label>
                         <input type="radio" class="btn-check" name="lang" id="lang-cn">
-                        <label class="btn btn-outline-primary-custom" for="lang-cn">CN</label>
+                        <label class="btn btn-outline-primary-custom" for="lang-cn">中文</label>
                     </div>
                 </div>
-                <div class="col-3">
-                    <label class="small fw-bold d-block mb-1">Price</label>
-                    <div class="btn-group btn-group-sm w-100" role="group">
+                <div class="col-6">
+                    <label class="small fw-bold d-block mb-1 text-uppercase" style="letter-spacing: 1px; font-size: 0.7rem;">Price</label>
+                    <div class="btn-group w-100" role="group">
                         <input type="radio" class="btn-check" name="price" id="price-ret" checked>
-                        <label class="btn btn-outline-primary-custom" for="price-ret">Ret</label>
+                        <label class="btn btn-outline-primary-custom" for="price-ret">Retail</label>
                         <input type="radio" class="btn-check" name="price" id="price-mem">
-                        <label class="btn btn-outline-primary-custom" for="price-mem">Mem</label>
+                        <label class="btn btn-outline-primary-custom" for="price-mem">Member</label>
                     </div>
                 </div>
             </div>
@@ -79,16 +82,24 @@
             <div class="card login-card mb-4">
                 <div class="card-body">
                     <h6 class="fw-bold mb-3">Cost per drop</h6>
-                    <select id="single-oil-select" class="form-select mb-3 rounded-pill">
+                    
+                    <div class="input-group input-group-sm mb-2">
+                        <span class="input-group-text bg-white border-end-0">
+                            <i class="bi bi-search"></i> </span>
+                        <input type="text" id="oil-filter" class="form-control border-start-0" placeholder="Search oil name (e.g. 'ar')..." oninput="populateSelectors()">
+                    </div>
+
+                    <select id="single-oil-select" class="form-select mb-3 rounded-pill" onchange="calculateEverything()">
                         <option value="">Select Oil + mL</option>
                     </select>
+                    
                     <div id="formula-display" class="p-3 bg-light rounded-3 small text-center text-muted">
                         Select an oil to see calculation
                     </div>
                 </div>
             </div>
 
-            <h5 class="fw-bold mt-4 mb-3">Recipe</h5>
+            <h5 class="fw-bold mt-4 mb-3">RECIPE</h5>
             
             <div class="card login-card mb-3">
                 <div class="card-body">
@@ -130,7 +141,7 @@
                 Total Cost: HKD <span id="final-total-price">0.00</span>
             </div>
 
-            <h5 class="fw-bold mt-4 mb-3">Logbook</h5>
+            <h5 class="fw-bold mt-4 mb-3">LOGBOOK</h5>
             <div class="card login-card mb-5">
                 <div class="card-body">
                     <h6 class="fw-bold mb-3">Customer</h6>
